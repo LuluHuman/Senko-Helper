@@ -14,7 +14,7 @@ import * as Location from "expo-location";
 import axios from "axios";
 import { Arrow, DirectionBusDouble, NotAccessible, VisitDouble } from "../../components/icons";
 import { Material3Scheme, useMaterial3Theme } from "@pchmn/expo-material3-theme";
-import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
+import { Button, Dialog, MD3DarkTheme, MD3LightTheme, Portal, Searchbar } from "react-native-paper";
 
 export default function BusArrival() {
 	const colorScheme = useColorScheme();
@@ -34,8 +34,13 @@ export default function BusArrival() {
 
 	const styles = style(colors, paperTheme, darkModeEnabled);
 
-	const [busStops, setBusStops] = useState<busStop[]>([]);
 	const [loading, setLoading] = useState(true);
+
+	const [busStops, setBusStops] = useState<busStop[]>([]);
+
+	const [busStopSearch, setBusStopQuery] = useState<string | null>(null);
+	const [busStopResults, setBusStopResults] = useState<busStop[] | null>(null);
+	const [menuVisible, setMenuVisible] = useState<false | busStop["BusStopCode"]>(false); // Menu visibility state
 
 	useEffect(() => {
 		(async () => {
@@ -49,6 +54,25 @@ export default function BusArrival() {
 			fetchNearbyBusStops(location.coords.latitude, location.coords.longitude);
 		})();
 	}, []);
+
+	useEffect(() => {
+		if (!busStopSearch || busStopSearch.trim() === "") return setBusStopResults(null);
+		fetchSearchResults(busStopSearch);
+	}, [busStopSearch]);
+
+	const fetchSearchResults = async (busStopSearch: string) => {
+		try {
+			setLoading(true);
+			const url = `https://rurutbl.luluhoy.tech/api/search-busstops?q=${busStopSearch}`;
+			const response = await axios.get(url);
+			setBusStopResults(response.data);
+		} catch (err) {
+			console.error(err);
+			alert("Error getting results: " + err);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const fetchNearbyBusStops = async (
 		latitude: busStop["Latitude"],
@@ -83,9 +107,7 @@ export default function BusArrival() {
 			};
 		});
 		const toggleExpand = () => {
-			if (!expanded) {
-				fetchBusArrivals(busStop.BusStopCode);
-			}
+			if (!expanded) fetchBusArrivals(busStop.BusStopCode);
 			setExpanded(!expanded);
 		};
 
@@ -172,12 +194,16 @@ export default function BusArrival() {
 			</View>
 		);
 
+		const openMenu = () => setMenuVisible(busStop.BusStopCode);
+		const closeMenu = () => setMenuVisible(false);
+
 		return (
 			<View
 				style={styles.busStopContainer}
 				key={busStop.BusStopCode}>
 				<TouchableOpacity
 					onPress={toggleExpand}
+					onLongPress={openMenu} // Open menu on long press
 					style={styles.busStopHeader}>
 					<Animated.View style={[{ marginRight: 10 }, style]}>
 						<Arrow color={colors.text.secondary}></Arrow>
@@ -189,6 +215,27 @@ export default function BusArrival() {
 						</Text>
 					</View>
 				</TouchableOpacity>
+
+				<Portal>
+					<Dialog
+						visible={menuVisible !== false && menuVisible == busStop.BusStopCode}
+						onDismiss={closeMenu}
+						style={{ padding: 20, margin: 0 }}>
+						<View>
+							<Text style={styles.busStopTitle}>{busStop.Description}</Text>
+							<Text style={styles.busStopSubtitle}>
+								{busStop.RoadName} ({busStop.BusStopCode})
+							</Text>
+						</View>
+						<Button
+							icon={"heart"}
+							onPress={() => {
+								/* Does Notihing ehe~! */
+							}}>
+							Add to Favorites
+						</Button>
+					</Dialog>
+				</Portal>
 				{expanded &&
 					(arrivalsLoading ? (
 						<ActivityIndicator
@@ -208,7 +255,16 @@ export default function BusArrival() {
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>Nearby Busses</Text>
+			<View>
+				<Searchbar
+					style={{ marginHorizontal: 24, marginVertical: 6 }}
+					placeholder="Bus stop code or name"
+					onChangeText={setBusStopQuery}
+					value={busStopSearch || ""}
+				/>
+
+				<Text style={styles.title}>{busStopResults ? "" : "Nearby bus stops"}</Text>
+			</View>
 			{loading ? (
 				<ActivityIndicator
 					size="large"
@@ -216,7 +272,7 @@ export default function BusArrival() {
 				/>
 			) : (
 				<FlatList
-					data={busStops}
+					data={busStopResults || busStops}
 					keyExtractor={(item) => item.BusStopCode}
 					renderItem={({ item, index }) => (
 						<BusStopItem
@@ -250,6 +306,7 @@ function style(
 			fontSize: 24,
 			color: colors.text.primary,
 			textAlign: "center",
+			marginVertical: 6,
 		},
 		container: {
 			flex: 1,
