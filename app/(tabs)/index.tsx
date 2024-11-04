@@ -14,7 +14,15 @@ import * as Location from "expo-location";
 import axios from "axios";
 import { Arrow, DirectionBusDouble, NotAccessible, VisitDouble } from "../../components/icons";
 import { Material3Scheme, useMaterial3Theme } from "@pchmn/expo-material3-theme";
-import { Button, Dialog, MD3DarkTheme, MD3LightTheme, Portal, Searchbar } from "react-native-paper";
+import {
+	Button,
+	Dialog,
+	IconButton,
+	MD3DarkTheme,
+	MD3LightTheme,
+	Portal,
+	Searchbar,
+} from "react-native-paper";
 
 export default function BusArrival() {
 	const colorScheme = useColorScheme();
@@ -40,7 +48,8 @@ export default function BusArrival() {
 
 	const [busStopSearch, setBusStopQuery] = useState<string | null>(null);
 	const [busStopResults, setBusStopResults] = useState<busStop[] | null>(null);
-	const [menuVisible, setMenuVisible] = useState<false | busStop["BusStopCode"]>(false); // Menu visibility state
+	const [showBusStopSearch, setBusStopSearchShowing] = useState<boolean>(false);
+	// const [menuVisible, setMenuVisible] = useState<false | busStop["BusStopCode"]>(false); // Menu visibility state
 
 	useEffect(() => {
 		(async () => {
@@ -194,8 +203,8 @@ export default function BusArrival() {
 			</View>
 		);
 
-		const openMenu = () => setMenuVisible(busStop.BusStopCode);
-		const closeMenu = () => setMenuVisible(false);
+		// const openMenu = () => setMenuVisible(busStop.BusStopCode);
+		// const closeMenu = () => setMenuVisible(false);
 
 		return (
 			<View
@@ -203,7 +212,7 @@ export default function BusArrival() {
 				key={busStop.BusStopCode}>
 				<TouchableOpacity
 					onPress={toggleExpand}
-					onLongPress={openMenu} // Open menu on long press
+					// onLongPress={openMenu}
 					style={styles.busStopHeader}>
 					<Animated.View style={[{ marginRight: 10 }, style]}>
 						<Arrow color={colors.text.secondary}></Arrow>
@@ -216,7 +225,7 @@ export default function BusArrival() {
 					</View>
 				</TouchableOpacity>
 
-				<Portal>
+				{/* <Portal>
 					<Dialog
 						visible={menuVisible !== false && menuVisible == busStop.BusStopCode}
 						onDismiss={closeMenu}
@@ -229,13 +238,11 @@ export default function BusArrival() {
 						</View>
 						<Button
 							icon={"heart"}
-							onPress={() => {
-								/* Does Notihing ehe~! */
-							}}>
+							onPress={() => {}}>
 							Add to Favorites
 						</Button>
 					</Dialog>
-				</Portal>
+				</Portal> */}
 				{expanded &&
 					(arrivalsLoading ? (
 						<ActivityIndicator
@@ -255,15 +262,48 @@ export default function BusArrival() {
 
 	return (
 		<View style={styles.container}>
-			<View>
-				<Searchbar
-					style={{ marginHorizontal: 24, marginVertical: 6 }}
-					placeholder="Bus stop code or name"
-					onChangeText={setBusStopQuery}
-					value={busStopSearch || ""}
-				/>
-
-				<Text style={styles.title}>{busStopResults ? "" : "Nearby bus stops"}</Text>
+			<View
+				style={{
+					display: "flex",
+					flexDirection: "row",
+					alignItems: "center",
+					justifyContent: "space-between",
+					paddingHorizontal: 12,
+					height: 50,
+				}}>
+				{showBusStopSearch ? (
+					<>
+						<IconButton
+							icon={"arrow-left"}
+							onPress={() => {
+								setBusStopSearchShowing(false);
+								setBusStopQuery(null);
+							}}
+						/>
+						<Searchbar
+							style={{ flex: 1 }}
+							placeholder="Bus stop code or name"
+							onChangeText={setBusStopQuery}
+							value={busStopSearch || ""}
+						/>
+					</>
+				) : (
+					<>
+						<Text style={styles.title}>{busStopResults ? "" : "Nearby bus stops"}</Text>
+						<View
+							style={{
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center",
+								flexDirection: "row",
+							}}>
+							{/* <IconButton icon={"heart"}></IconButton> */}
+							<IconButton
+								icon={"magnify"}
+								onPress={() => setBusStopSearchShowing(true)}></IconButton>
+						</View>
+					</>
+				)}
 			</View>
 			{loading ? (
 				<ActivityIndicator
@@ -306,7 +346,6 @@ function style(
 			fontSize: 24,
 			color: colors.text.primary,
 			textAlign: "center",
-			marginVertical: 6,
 		},
 		container: {
 			flex: 1,
