@@ -1,37 +1,33 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import React from "react";
 
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { BottomNavigation } from "react-native-paper";
+import BusArrival from ".";
+import TabTwoScreen from "./halal-time";
+import { BusIcon, PrayerTimesIcon } from "../../components/icons";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+const MyComponent = () => {
+	const [index, setIndex] = React.useState(0);
+	const [routes] = React.useState([
+		{
+			key: "busArrival",
+			title: "Bus Arrival",
+			focusedIcon: BusIcon,
+		},
+		{ key: "prayerTimes", title: "Prayer Times", focusedIcon: PrayerTimesIcon },
+	]);
 
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-  );
-}
+	const renderScene = BottomNavigation.SceneMap({
+		busArrival: BusArrival,
+		prayerTimes: TabTwoScreen,
+	});
+
+	return (
+		<BottomNavigation
+			navigationState={{ index, routes }}
+			onIndexChange={setIndex}
+			renderScene={renderScene}
+		/>
+	);
+};
+
+export default MyComponent;
