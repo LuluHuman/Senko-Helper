@@ -18,6 +18,7 @@ export interface nextBus {
     Load: "SEA" | "SDA" | "LSD" | ""; // Current bus occupancy / crowding level
     Feature: "WAB" | ""; // Indicates if bus is wheel-chair accessible
     Type: "SD" | "DD" | "BD" | ""; // Vehicle type
+    Monitored: 0 | 1 //Indicates if the bus arrival time is based on the schedule from operators. 
 }
 export type services =
     | {

@@ -1,4 +1,4 @@
-import { MUISPrayerTime } from "../lib/types";
+import { MUISPrayerTime } from "@/lib/types";
 import { CircularProgress } from "../../components/CircularProgress";
 
 import axios from "axios";
@@ -92,12 +92,13 @@ export default function PrayerTime() {
 
 					await Notifications.scheduleNotificationAsync({
 						content: {
-							title: `Nanoja its ${prayer_names[i]} time!`,
+							title: `Nanoja it's ${prayer_names[i]} time!`,
 							body: `fufu You have from ${currentPrayerString} to ${nextPrayerString}`,
 						},
 						trigger: currentPrayerDate,
 					});
 
+					if (i == 1) continue;
 					const hasAlreadyPassed = new Date().getTime() > nextPrayerMs;
 					const dayOffset = hasAlreadyPassed ? _24Hours : 0;
 					const BeforenextTime = nextPrayerMs - _30Mins + dayOffset;
@@ -171,7 +172,7 @@ export default function PrayerTime() {
 	async function registerBackgroundTask() {
 		if (Platform.OS === "android") {
 			await Notifications.setNotificationChannelAsync("default", {
-				name: "default",
+				name: "did-you-pray-today",
 				importance: Notifications.AndroidImportance.MAX,
 				lightColor: "#FF231F7C",
 			});
@@ -200,6 +201,19 @@ export default function PrayerTime() {
 			console.error("Failed to register background task:", error);
 		}
 	}
+
+	// const Check = ({ i }: { i: number }) => {
+	// 	const [checked, setChecked] = React.useState(false);
+
+	// 	return (
+	// 		<Checkbox
+	// 			status={checked ? "checked" : "unchecked"}
+	// 			onPress={() => {
+	// 				setChecked(!checked);
+	// 			}}
+	// 		/>
+	// 	);
+	// };
 
 	return (
 		<View style={styles.container}>
@@ -253,11 +267,19 @@ export default function PrayerTime() {
 										<Text style={styles.timeSectionText}>
 											{prayer_names[index]}
 										</Text>
-										<Text style={styles.timeSectionTime}>
-											{new Date(time).toLocaleString("en-US", {
-												timeStyle: "short",
-											})}
-										</Text>
+										<View
+											style={{
+												display: "flex",
+												flexDirection: "row",
+												alignItems: "center",
+											}}>
+											<Text style={styles.timeSectionTime}>
+												{new Date(time).toLocaleString("en-US", {
+													timeStyle: "short",
+												})}
+											</Text>
+											{/* <Check i={index} /> */}
+										</View>
 									</View>
 								</View>
 							);
@@ -297,7 +319,8 @@ function style(
 		},
 		timeSection: {
 			backgroundColor: darkModeEnabled ? paperTheme.colors.elevation.level2 : "#fff",
-			padding: 10,
+			paddingHorizontal: 10,
+			paddingVertical: 12,
 			marginVertical: 8,
 			marginHorizontal: 16,
 			borderRadius: 8,

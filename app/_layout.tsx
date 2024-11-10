@@ -30,18 +30,27 @@ export default function RootLayout() {
 		}
 	}, [loaded]);
 
-	if (!loaded) {
-		return null;
-	}
+	if (!loaded) return null;
 
 	return (
 		<PaperProvider theme={paperTheme}>
 			<Stack>
 				<Stack.Screen
+					name="savedBusstops/index"
+					options={{ headerShown: false }}
+				/>
+				<Stack.Screen
+					name="searchBusstops/index"
+					options={{ headerShown: false }}
+				/>
+				<Stack.Screen
 					name="(tabs)"
 					options={{ headerShown: false }}
 				/>
-				<Stack.Screen name="+not-found" />
+				<Stack.Screen
+					name="+not-found"
+					options={{ headerShown: false }}
+				/>
 			</Stack>
 		</PaperProvider>
 	);

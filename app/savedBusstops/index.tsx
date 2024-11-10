@@ -1,13 +1,11 @@
 import { busStop } from "@/lib/types";
 import React, { useCallback, useEffect, useState } from "react";
 import { Text, StyleSheet, View, FlatList, ActivityIndicator, useColorScheme } from "react-native";
-import * as Location from "expo-location";
 import { Material3Scheme, useMaterial3Theme } from "@pchmn/expo-material3-theme";
 import { IconButton, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import { router } from "expo-router";
-import * as apis from "@/lib/api";
+import { getData } from "@/lib/db";
 import { BusStopItem } from "@/components/BusStopItem";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
 
 export default function BusArrival() {
@@ -26,105 +24,54 @@ export default function BusArrival() {
 		},
 	};
 
-	const styles = style(colors, paperTheme);
-
 	const [loading, setLoading] = useState(true);
-	const [busStops, setBusStops] = useState<busStop[]>([]);
-	const [menuVisible, setMenuVisible] = useState<false | busStop["BusStopCode"]>(false); // Menu visibility state
-	const [location, setLocation] = useState<Location.LocationObject>(); // Menu visibility state
+	const [savedBusStops, setSavedBusStops] = useState<busStop[] | null>(null);
+	const [messageText, setMessage] = useState<string | undefined>();
+	const [menuVisible, setMenuVisible] = useState<false | busStop["BusStopCode"]>(false);
 	const [isRefreshing, setIsRefreshing] = useState(false);
-
-	const fetchNearbyBusStops = async () => {
-		let { status } = await Location.requestForegroundPermissionsAsync();
-		if (status !== "granted") return alert("Permission to access location was denied");
-		let location = await Location.getCurrentPositionAsync({});
-		setLocation(location);
-
-		return apis.getNearbyBusStops({
-			latitude: location.coords.latitude,
-			longitude: location.coords.longitude,
-		});
-	};
 
 	useEffect(() => {
 		setLoading(true);
-		fetchNearbyBusStops().then((busStops) => {
-			setBusStops(busStops as busStop[]);
+		getData("saved-bus-stops").then((busStops) => {
 			setLoading(false);
+			if (!busStops || busStops.length < 1) return setMessage("No Saved bus stops");
+			setSavedBusStops(busStops);
 		});
 	}, []);
 
 	const reloadData = useCallback(() => {
 		setIsRefreshing(true);
-		fetchNearbyBusStops().then((busStops) => {
-			setBusStops(busStops as busStop[]);
+
+		getData("saved-bus-stops").then((busStops) => {
 			setIsRefreshing(false);
+			if (!busStops || busStops.length < 1) return setMessage("No Saved bus stops");
+			setSavedBusStops(busStops);
 		});
 	}, []);
 
+	const styles = style(colors, paperTheme);
 	return (
 		<GestureHandlerRootView>
 			<View style={styles.container}>
-				<View
-					style={{
-						display: "flex",
-						flexDirection: "row",
-						alignItems: "center",
-						justifyContent: "space-between",
-						paddingHorizontal: 16,
-						height: 50,
-					}}>
-					<Text style={styles.title}>{"Nearby bus stops"}</Text>
-					<View
-						style={{
-							display: "flex",
-							justifyContent: "center",
-							alignItems: "center",
-							flexDirection: "row",
-						}}>
-						<IconButton
-							icon={"heart"}
-							onPress={() => router.push("/savedBusstops")}
-						/>
-						<IconButton
-							icon={"magnify"}
-							onPress={() => router.push("/searchBusstops")}
-						/>
-					</View>
+				<View style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+					<IconButton
+						icon={"arrow-left"}
+						onPress={
+							router.canGoBack() ? () => router.back() : () => router.navigate("/")
+						}
+					/>
+					<Text style={styles.title}>Saved bus stops</Text>
 				</View>
 
-				<View>
-					<MapView
-						provider={PROVIDER_GOOGLE}
-						style={{ height: 250 }}
-						region={{
-							latitude: location?.coords.latitude || 0,
-							longitude: location?.coords.longitude || 0,
-							latitudeDelta: 0.0015,
-							longitudeDelta: 0.00121,
-						}}
-						mapType={"satellite"}
-						showsUserLocation={true}>
-						{busStops.map((busStop: busStop) => {
-							return (
-								<Marker
-									key={busStop.BusStopCode}
-									coordinate={{
-										latitude: busStop.Latitude,
-										longitude: busStop.Longitude,
-									}}
-									title={busStop.Description}
-									description={busStop.RoadName}
-								/>
-							);
-						})}
-					</MapView>
-				</View>
 				{loading ? (
 					<ActivityIndicator
 						size="large"
 						color={paperTheme.colors.primary}
 					/>
+				) : messageText ? (
+					<View style={{ marginVertical: 50 }}>
+						<Text style={styles.title}>{messageText}</Text>
+					</View>
 				) : (
 					<FlatList
 						refreshControl={
@@ -134,7 +81,7 @@ export default function BusArrival() {
 								colors={[paperTheme.colors.onPrimary]}
 							/>
 						}
-						data={busStops}
+						data={savedBusStops}
 						keyExtractor={(item) => item.BusStopCode}
 						renderItem={({ item, index }) => (
 							<BusStopItem

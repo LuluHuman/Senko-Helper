@@ -25,8 +25,8 @@ export function Arrow({ color }: { color: any }) {
 export function VisitDouble({ color }: { color: any }) {
 	return (
 		<Svg
-			width="24"
-			height="24"
+			width="16"
+			height="16"
 			viewBox="0 0 24 24"
 			fill="none">
 			<G clip-path="url(#clip0_5_2)">
@@ -55,8 +55,8 @@ export function VisitDouble({ color }: { color: any }) {
 export function DirectionBusDouble({ color }: { color: any }) {
 	return (
 		<Svg
-			width="24"
-			height="24"
+			width="16"
+			height="16"
 			viewBox="0 0 31 31"
 			fill="none">
 			<G clipPath="url(#clip0_3_21)">
@@ -85,8 +85,8 @@ export function DirectionBusDouble({ color }: { color: any }) {
 export function NotAccessible({ color }: { color: any }) {
 	return (
 		<Svg
-			width="24"
-			height="24"
+			width="16"
+			height="16"
 			viewBox="0 0 31 31"
 			fill="none">
 			<Path d="m14 11.05-3.42-3.42c.32-.34.74-.57 1.23-.61.48-.04.84.07 1.2.26.19.1.39.22.63.46l1.29 1.43c.98 1.08 2.53 1.85 4.07 1.83v2c-1.75-.01-3.71-.88-5-1.95M12 6c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2M2.81 2.81 1.39 4.22 10 12.83V15c0 1.1.9 2 2 2h2.17l5.61 5.61 1.41-1.41zM10 20c-1.66 0-3-1.34-3-3 0-1.31.84-2.41 2-2.83V12.1c-2.28.46-4 2.48-4 4.9 0 2.76 2.24 5 5 5 2.42 0 4.44-1.72 4.9-4h-2.07c-.41 1.16-1.52 2-2.83 2"></Path>
@@ -94,6 +94,17 @@ export function NotAccessible({ color }: { color: any }) {
 	);
 }
 
+export function Schedule({ color }: { color: any }) {
+	return (
+		<Svg
+			height="16"
+			viewBox="0 -960 960 960"
+			width="16"
+			fill={color}>
+			<Path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-400Zm0 320q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Z" />
+		</Svg>
+	);
+}
 export function PrayerTimesIcon({ color }: { color: any }) {
 	return (
 		<Svg
