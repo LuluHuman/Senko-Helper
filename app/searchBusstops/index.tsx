@@ -6,6 +6,7 @@ import { IconButton, MD3DarkTheme, MD3LightTheme, Searchbar } from "react-native
 import { router } from "expo-router";
 import * as apis from "@/lib/api";
 import { BusStopItem } from "@/components/BusStopItem";
+import { NavigationContainer } from "@react-navigation/native";
 
 export default function BusArrival() {
 	const colorScheme = useColorScheme();

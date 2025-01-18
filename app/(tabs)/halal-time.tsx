@@ -1,5 +1,5 @@
 import { MUISPrayerTime } from "@/lib/types";
-import { CircularProgress } from "../../components/CircularProgress";
+import { CircularProgress } from "@/components/CircularProgress";
 
 import axios from "axios";
 
@@ -10,6 +10,7 @@ import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 
 import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
+import { NavigationContainer } from "@react-navigation/native";
 
 const NOTIFICATION_TASK = "NOTIFICATION_TASK";
 
@@ -53,7 +54,7 @@ export default function PrayerTime() {
 				setLoading(true);
 				const prayerTimesRes = await fetchPrayerTimes();
 				const prayerTimesMap = prayerTimesRes.map((time, i) => {
-					const afternoon = i > 2 ? 12 : 0;
+					const afternoon = i > 1 ? 12 : 0;
 					const [hours, minutes] = time.split(":").map(Number);
 
 					const date = new Date();
@@ -157,7 +158,7 @@ export default function PrayerTime() {
 
 	async function fetchPrayerTimes() {
 		try {
-			const _url = `https://www.muis.gov.sg/api/pagecontentapi/GetPrayerTime`;
+			const _url = `https://www.muis.gov.sg/api/pagecontentapi/GetPrayerTime?v=${new Date().getTime()}`;
 			const prayerTimesRes = await axios.get(_url);
 			setPrayerTimesData(prayerTimesRes.data);
 
@@ -178,13 +179,13 @@ export default function PrayerTime() {
 			});
 		}
 		if (!TaskManager.isTaskDefined(NOTIFICATION_TASK)) {
-			TaskManager.defineTask(NOTIFICATION_TASK, ({ data, error }) => {
-				if (error) {
-					console.error("Background task error:", error);
-					return;
-				}
-				console.log("Background task running:", data);
-			});
+			// TaskManager.defineTask(NOTIFICATION_TASK, ({ data, error }) => {
+			// 	if (error) {
+			// 		console.error("Background task error:", error);
+			// 		return;
+			// 	}
+			// 	console.log("Background task running:", data);
+			// });
 		}
 
 		await Notifications.setNotificationHandler({

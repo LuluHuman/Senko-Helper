@@ -84,7 +84,7 @@ export const BusStopItem = ({
 				/>
 			);
 
-		if (bus.Monitored == 1)
+		if (bus.Monitored == 0)
 			icons.push(
 				<Schedule
 					color={colors.text.secondary}
@@ -220,9 +220,7 @@ export const BusStopItem = ({
 	}, []);
 	const isEmptyArray = arrivalData.length < 1;
 	return (
-		<View
-			style={styles.busStopContainer}
-			key={busStop.BusStopCode}>
+		<View style={styles.busStopContainer}>
 			<Portal>
 				<Dialog
 					visible={menuVisible !== false && menuVisible == busStop.BusStopCode}

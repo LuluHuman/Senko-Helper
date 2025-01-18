@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { getData } from "@/lib/db";
 import { BusStopItem } from "@/components/BusStopItem";
 import { GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
+import { NavigationContainer } from "@react-navigation/native";
 
 export default function BusArrival() {
 	const colorScheme = useColorScheme();

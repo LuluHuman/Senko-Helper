@@ -1,15 +1,13 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
-import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
+import { MD3DarkTheme, MD3LightTheme, PaperProvider, BottomNavigation } from "react-native-paper";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import "react-native-reanimated";
-
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { Text, useColorScheme } from "react-native";
 import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
-
-SplashScreen.preventAutoHideAsync();
+import { BusIcon, PrayerTimesIcon } from "@/components/icons";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 export default function RootLayout() {
 	const colorScheme = useColorScheme();
@@ -20,21 +18,13 @@ export default function RootLayout() {
 			? { ...MD3DarkTheme, colors: theme.dark }
 			: { ...MD3LightTheme, colors: theme.light };
 
-	const [loaded] = useFonts({
-		SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-	});
-
-	useEffect(() => {
-		if (loaded) {
-			SplashScreen.hideAsync();
-		}
-	}, [loaded]);
-
-	if (!loaded) return null;
-
 	return (
 		<PaperProvider theme={paperTheme}>
 			<Stack>
+				<Stack.Screen
+					name="(tabs)"
+					options={{ headerShown: false }}
+				/>
 				<Stack.Screen
 					name="savedBusstops/index"
 					options={{ headerShown: false }}
@@ -43,15 +33,9 @@ export default function RootLayout() {
 					name="searchBusstops/index"
 					options={{ headerShown: false }}
 				/>
-				<Stack.Screen
-					name="(tabs)"
-					options={{ headerShown: false }}
-				/>
-				<Stack.Screen
-					name="+not-found"
-					options={{ headerShown: false }}
-				/>
 			</Stack>
+
+			<StatusBar style="auto" />
 		</PaperProvider>
 	);
 }

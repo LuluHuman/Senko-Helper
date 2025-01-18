@@ -95,7 +95,6 @@ export default function BusArrival() {
 
 				<View>
 					<MapView
-						provider={PROVIDER_GOOGLE}
 						style={{ height: 250 }}
 						region={{
 							latitude: location?.coords.latitude || 0,
