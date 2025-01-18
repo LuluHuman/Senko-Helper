@@ -4,6 +4,7 @@ import { BottomNavigation } from "react-native-paper";
 import BusArrival from "./index";
 import TabTwoScreen from "./halal-time";
 import { BusIcon, PrayerTimesIcon } from "../../components/icons";
+import RuruTBL from "./rurutbl";
 
 const MyComponent = () => {
 	const [index, setIndex] = React.useState(0);
@@ -13,11 +14,13 @@ const MyComponent = () => {
 			title: "Bus Arrival",
 			focusedIcon: BusIcon,
 		},
+		{ key: "rurutbl", title: "RuruTBL", focusedIcon: "table" },
 		{ key: "prayertimes", title: "Prayer Times", focusedIcon: PrayerTimesIcon },
 	]);
 
 	const renderScene = BottomNavigation.SceneMap({
 		busarrival: BusArrival,
+		rurutbl: RuruTBL,
 		prayertimes: TabTwoScreen,
 	});
 

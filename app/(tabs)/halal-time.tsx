@@ -10,7 +10,6 @@ import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 
 import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
-import { NavigationContainer } from "@react-navigation/native";
 
 const NOTIFICATION_TASK = "NOTIFICATION_TASK";
 
