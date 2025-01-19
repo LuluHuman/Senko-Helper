@@ -68,8 +68,6 @@ export default function PrayerTime() {
 					console.warn("Notification permissions not granted");
 					return;
 				}
-				const notificationTime = new Date();
-				notificationTime.setSeconds(notificationTime.getSeconds() + 10);
 
 				if (Platform.OS == "android")
 					await Notifications.cancelAllScheduledNotificationsAsync();

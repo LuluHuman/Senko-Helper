@@ -62,9 +62,11 @@ export function CircularProgress({
 					justifyContent: "center",
 					flexDirection: "column",
 				}}>
-				<Text style={{ color: textColor, fontSize: 20 }}>{title}</Text>
-				<Text style={{ color: textColor, fontSize: 18 }}>{subitile}</Text>
-				<Text style={{ color: textColor, fontSize: 20 }}>{timeRemaining}</Text>
+				{title && <Text style={{ color: textColor, fontSize: 20 }}>{title}</Text>}
+				{subitile && <Text style={{ color: textColor, fontSize: 18 }}>{subitile}</Text>}
+				{timeRemaining && (
+					<Text style={{ color: textColor, fontSize: 20 }}>{timeRemaining}</Text>
+				)}
 			</View>
 		</View>
 	);

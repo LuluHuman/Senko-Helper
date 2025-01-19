@@ -12,9 +12,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#121212"
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -45,6 +42,15 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#E8B928",
           "defaultChannel": "default"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#121212",
+          "image": "./assets/images/splash.png",
+          "imageWidth": 500
         }
       ]
     ],

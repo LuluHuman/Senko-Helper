@@ -1,5 +1,17 @@
-import { CircularProgress } from "@/components/rurutbl/CircularProgress-rurutbl";
+//#region Imports
+
+import axios from "axios";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { Settings } from "@/components/icons";
 import { Track } from "@/components/rurutbl/track";
+import { dayList, weekList } from "@/rurutbl-lib/types";
+import { ScrollView } from "react-native-gesture-handler";
+import { StyleSheet, useColorScheme, View } from "react-native";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import { CircularProgress } from "@/components/rurutbl/CircularProgress-rurutbl";
+import { Material3Scheme, useMaterial3Theme } from "@pchmn/expo-material3-theme";
+import { ActivityIndicator, Button, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import {
 	DateMs,
 	defaultSettings,
@@ -7,14 +19,11 @@ import {
 	locSubjInit,
 	ToDayStr,
 } from "@/rurutbl-lib/functions";
-import { dayList, weekList } from "@/rurutbl-lib/types";
-import { Material3Scheme, useMaterial3Theme } from "@pchmn/expo-material3-theme";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { StyleSheet, useColorScheme, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
-import { ActivityIndicator, MD3DarkTheme, MD3LightTheme, Text } from "react-native-paper";
-import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import WeatherData from "@/components/rurutbl/weather";
+import { PublicConfig } from "@/components/rurutbl/config";
+// #endregion
+
 export default function RuruTBL() {
 	// ? colors
 	const colorScheme = useColorScheme();
@@ -35,7 +44,7 @@ export default function RuruTBL() {
 
 	// ?
 
-	const [settings, setSettings] = useState(defaultSettings);
+	const [settings, setSettings] = useState<typeof defaultSettings>(defaultSettings);
 
 	const [loading, setLoading] = useState(true);
 	const [trackLabels, setTrackLabels] = useState({ title: "", subtitle: "", timeRemaining: "" });
@@ -48,17 +57,37 @@ export default function RuruTBL() {
 	const [daylist, setDaylist] = useState({});
 
 	useEffect(() => {
-		const { level, class: className } = settings.class;
+		const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
+		const semstartDate = new Date("2025-1-4"); //? Note: Date shall be set every Saturday of the semester (2 Days before Mon)
+		const currentDate = new Date();
 
-		const _host = "https://rurutbl.luluhoy.tech";
-		const _url = `${_host}/classes/${level}/${className}/${weekState}.json`;
-		axios.get(_url).then((req) => {
-			setweekListn(req.data);
-		});
-	}, [weekState, settings]);
+		const _timeDifference = currentDate.getTime() - semstartDate.getTime();
+		const weekNumber = Math.ceil(_timeDifference / millisecondsPerWeek);
+
+		const HBLWeeks = [4, 10];
+		// const HBLWeeks = [2, 6, 8, 10];
+		const isOdd = !HBLWeeks.includes(weekNumber);
+		setweekState(isOdd ? "odd" : "even");
+	}, []);
 
 	useEffect(() => {
+		AsyncStorage.getItem("@settings").then((savedSettings) => {
+			const settings = savedSettings
+				? (JSON.parse(savedSettings) as unknown as typeof defaultSettings)
+				: defaultSettings;
+			setSettings(settings);
 
+			const { level, class: className } = settings.class;
+
+			const _host = "https://rurutbl.luluhoy.tech";
+			const _url = `${_host}/classes/${level}/${className}/${weekState}.json`;
+			axios.get(_url).then((req) => {
+				setweekListn(req.data);
+			});
+		});
+	}, [weekState]);
+
+	useEffect(() => {
 		if (!weekList) return;
 		const curDate = new DateMs();
 
@@ -72,7 +101,9 @@ export default function RuruTBL() {
 			const nextDayI = curDayI + 1 > 6 ? 0 : curDayI + 1;
 			const nextDay = ToDayStr(nextDayI).long;
 			const nextdayList = weekList[nextDay];
-			const nextSortedTimeList = Object.keys(nextdayList).sort((a, b) => parseInt(a) - parseInt(b));
+			const nextSortedTimeList = Object.keys(nextdayList).sort(
+				(a, b) => parseInt(a) - parseInt(b)
+			);
 
 			const firstLsnTime = parseInt(nextSortedTimeList[0]);
 			const HM = new DateMs().toHourMinuteString(firstLsnTime);
@@ -91,7 +122,6 @@ export default function RuruTBL() {
 
 	const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
 	useEffect(() => {
-
 		const locSubj = locSubjInit(settings);
 
 		if (currentTimeout) clearInterval(currentTimeout);
@@ -144,11 +174,21 @@ export default function RuruTBL() {
 		return () => clearInterval(currentTimeout);
 	}, [settings, weekList, day]);
 
+	const states = {
+		weekState: weekState,
+		day: day,
+	};
+	const setStates = {
+		setTrackLabels: setTrackLabels,
+		setLoading: setLoading,
+		setweekState: setweekState,
+		setDay: setDay,
+	};
+
 	return (
 		<SafeAreaProvider>
-			<SafeAreaView
-				edges={["top"]}>
-				<ScrollView >
+			<SafeAreaView edges={["top"]}>
+				<ScrollView>
 					<View style={styles.container}>
 						{loading ? (
 							<ActivityIndicator
@@ -163,6 +203,30 @@ export default function RuruTBL() {
 									alignItems: "center",
 									margin: 10,
 								}}>
+								<View style={styles.container}>
+									<View
+										style={{
+											display: "flex",
+											flexDirection: "row",
+											alignItems: "center",
+											justifyContent: "flex-end",
+											height: 50,
+											width: "100%",
+										}}>
+										<View
+											style={{
+												display: "flex",
+												justifyContent: "center",
+												alignItems: "center",
+												flexDirection: "row",
+											}}>
+											<Button
+												onPress={() => router.push("/rurutbl-settings")}>
+												<Settings color={colors.text.secondary} />
+											</Button>
+										</View>
+									</View>
+								</View>
 								<CircularProgress
 									valuePercentage={progressPercentage}
 									title={trackLabels.title}
@@ -172,6 +236,23 @@ export default function RuruTBL() {
 									backgroundColor={paperTheme.colors.backdrop}
 									progressColor={paperTheme.colors.primary}
 								/>
+
+								<View
+									style={{
+										width: "100%",
+										display: "flex",
+										justifyContent: "center",
+									}}>
+									<PublicConfig
+										settings={settings}
+										states={states}
+										setStates={setStates}
+									/>
+									<WeatherData
+										dayList={daylist}
+										day={day}
+									/>
+								</View>
 
 								<Track
 									settings={settings}

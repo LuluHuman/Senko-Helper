@@ -88,13 +88,13 @@ export function Track({ dayList, active, day, settings, isOdd }: TrackType) {
 
 		track.push(
 			<View
-				key={typeof subject === "string" ? subject : subject[0]}
+				key={(typeof subject === "string" ? subject : subject[0]) + i}
 				style={[
 					isEND ? styles.endItem : styles.trackItem,
 					isActive ? styles.activeOutline : null,
 				]}>
 				{isEND ? (
-					<Text style={styles.endText}>END - {HM}</Text>
+					<Text>END - {HM}</Text>
 				) : (
 					<>
 						<View style={{ width: "100%", display: "flex", flexDirection: "row" }}>
@@ -229,7 +229,6 @@ function style(
 			backgroundColor: darkModeEnabled ? paperTheme.colors.elevation.level2 : "#fff",
 		},
 		activeOutline: { borderWidth: 2, borderColor: paperTheme.colors.primary },
-		endText: { color: colorGrey },
 		trackText: { flex: 1, fontWeight: "bold" },
 		timeTextContainer: { marginLeft: 10 },
 		timeText: { color: paperTheme.colors.primary, fontWeight: "bold" },

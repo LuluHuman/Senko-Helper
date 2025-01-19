@@ -37,6 +37,10 @@ export default function RootLayout() {
 							name="searchBusstops/index"
 							options={{ headerShown: false }}
 						/>
+						<Stack.Screen
+							name="rurutbl-settings/index"
+							options={{ headerShown: false }}
+						/>
 					</Stack>
 
 					<StatusBar style="auto" />
