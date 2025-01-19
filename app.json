@@ -12,9 +12,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#121212"
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -27,7 +24,7 @@
       "package": "tech.luluhoy.senkohelper",
       "config": {
         "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAP_API_KEY_HERE"
+          "apiKey": "AIzaSyCn0423_UO2SUg9F0f8CZFg5CjrzdgMITY"
         }
       }
     },
@@ -45,6 +42,19 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#E8B928",
           "defaultChannel": "default"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#121212",
+          "image": "./assets/splash-icon.png",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#000000"
+          },
+          "imageWidth": 500
         }
       ]
     ],
