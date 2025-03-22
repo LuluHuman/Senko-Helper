@@ -339,7 +339,9 @@ export const BusStopItem = ({
 				) : isEmptyArray ? (
 					<Text style={styles.busStopErr}>Not In Operation (LTA Returned no busses)</Text>
 				) : (
-					arrivalData.map(renderArrival)
+					arrivalData
+						.sort((a, b) => parseInt(a.ServiceNo) - parseInt(b.ServiceNo))
+						.map(renderArrival)
 				))}
 		</View>
 	);

@@ -9,9 +9,33 @@ import { Material3Scheme, useMaterial3Theme } from "@pchmn/expo-material3-theme"
 import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 
 import * as Notifications from "expo-notifications";
+import * as BackgroundFetch from "expo-background-fetch";
 import * as TaskManager from "expo-task-manager";
 
-const NOTIFICATION_TASK = "NOTIFICATION_TASK";
+const BACKGROUND_FETCH_TASK = "background-fetch";
+
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+	const now = Date.now();
+	console.log(`Got background fetch call at date: ${new Date(now).toISOString()}`);
+
+	const prayerTimes = await fetchPrayerTimes();
+	const parsedPrayerTimes = parseMUISPrayerTimes(prayerTimes);
+	scheduleNotifications(parsedPrayerTimes);
+
+	return BackgroundFetch.BackgroundFetchResult.NewData;
+});
+
+async function registerBackgroundFetchAsync() {
+	return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+		minimumInterval: 60 * 60 * 2, // 15 minutes
+		stopOnTerminate: true, // android only,
+		startOnBoot: true, // android only
+	});
+}
+
+const prayer_names = ["Fajir", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+const _30Mins = 1800000;
+const _24Hours = 24 * 60 * 60 * 1000;
 
 export default function PrayerTime() {
 	const colorScheme = useColorScheme();
@@ -44,78 +68,21 @@ export default function PrayerTime() {
 
 	const [loading, setLoading] = useState(true);
 
-	const prayer_names = ["Fajir", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 	useEffect(() => {
-		registerBackgroundTask();
-
+		setLoading(true);
 		(async () => {
-			try {
-				setLoading(true);
-				const prayerTimesRes = await fetchPrayerTimes();
-				const prayerTimesMap = prayerTimesRes.map((time, i) => {
-					const afternoon = i > 1 ? 12 : 0;
-					const [hours, minutes] = time.split(":").map(Number);
+			const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_FETCH_TASK);
 
-					const date = new Date();
-					date.setHours(hours + afternoon, minutes, 0, 0);
+			if (!isRegistered) await registerBackgroundFetchAsync();
+			// if (isRegistered) await BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
 
-					return date.getTime();
-				});
-				setPrayerTimes(prayerTimesMap);
+			const prayerTimes = await fetchPrayerTimes();
+			setPrayerTimesData(prayerTimes);
 
-				const { status } = await Notifications.requestPermissionsAsync();
-				if (status !== "granted") {
-					console.warn("Notification permissions not granted");
-					return;
-				}
-
-				if (Platform.OS == "android")
-					await Notifications.cancelAllScheduledNotificationsAsync();
-
-				const _30Mins = 1800000;
-				const _24Hours = 24 * 60 * 60 * 1000;
-
-				for (let i = 0; i < prayerTimesMap.length; i++) {
-					const currentPrayerMs = prayerTimesMap[i];
-					const currentPrayerDate = new Date(currentPrayerMs);
-					const currentPrayerString = currentPrayerDate.toLocaleString("en-US", {
-						timeStyle: "short",
-					});
-
-					const nextPrayerMs = prayerTimesMap[i + 1] || prayerTimesMap[0] + _24Hours;
-					const nextPrayerDate = new Date(nextPrayerMs);
-					const nextPrayerString = nextPrayerDate.toLocaleString("en-US", {
-						timeStyle: "short",
-					});
-
-					await Notifications.scheduleNotificationAsync({
-						content: {
-							title: `Nanoja it's ${prayer_names[i]} time!`,
-							body: `fufu You have from ${currentPrayerString} to ${nextPrayerString}`,
-						},
-						trigger: currentPrayerDate,
-					});
-
-					if (i == 1) continue;
-					const hasAlreadyPassed = new Date().getTime() > nextPrayerMs;
-					const dayOffset = hasAlreadyPassed ? _24Hours : 0;
-					const BeforenextTime = nextPrayerMs - _30Mins + dayOffset;
-					const notificationTime30 = new Date(BeforenextTime);
-
-					await Notifications.scheduleNotificationAsync({
-						content: {
-							title: `EEEP! ${prayer_names[i]} is running out ;-;`,
-							body: "Nanoja you have 30 mins left!",
-						},
-						trigger: notificationTime30,
-					});
-				}
-			} catch (error) {
-				console.error(error);
-				alert("Error fetching " + error);
-			} finally {
-				setLoading(false);
-			}
+			const parsedPrayerTimes = parseMUISPrayerTimes(prayerTimes);
+			setPrayerTimes(parsedPrayerTimes);
+			scheduleNotifications(parsedPrayerTimes);
+			setLoading(false);
 		})();
 	}, []);
 
@@ -124,6 +91,7 @@ export default function PrayerTime() {
 
 		function loop() {
 			if (!prayerTimes) return;
+
 			const curTime = new Date().getTime();
 
 			const current_prayer_index = prayerTimes.findIndex(
@@ -152,53 +120,6 @@ export default function PrayerTime() {
 		const i = setInterval(loop, 1000);
 		return () => clearInterval(i);
 	}, [prayerTimes]);
-
-	async function fetchPrayerTimes() {
-		try {
-			const _url = `https://www.muis.gov.sg/api/pagecontentapi/GetPrayerTime?v=${new Date().getTime()}`;
-			const prayerTimesRes = await axios.get(_url);
-			setPrayerTimesData(prayerTimesRes.data);
-
-			const { Subuh, Syuruk, Zohor, Asar, Maghrib, Isyak } = prayerTimesRes.data;
-			return [Subuh, Syuruk, Zohor, Asar, Maghrib, Isyak];
-		} catch (error) {
-			console.error("Error fetching prayer times:", error);
-			throw new Error("Unable to fetch prayer times");
-		}
-	}
-
-	async function registerBackgroundTask() {
-		if (Platform.OS === "android") {
-			await Notifications.setNotificationChannelAsync("default", {
-				name: "did-you-pray-today",
-				importance: Notifications.AndroidImportance.MAX,
-				lightColor: "#FF231F7C",
-			});
-		}
-		if (!TaskManager.isTaskDefined(NOTIFICATION_TASK)) {
-			// TaskManager.defineTask(NOTIFICATION_TASK, ({ data, error }) => {
-			// 	if (error) {
-			// 		console.error("Background task error:", error);
-			// 		return;
-			// 	}
-			// 	console.log("Background task running:", data);
-			// });
-		}
-
-		await Notifications.setNotificationHandler({
-			handleNotification: async () => ({
-				shouldShowAlert: true,
-				shouldPlaySound: true,
-				shouldSetBadge: true,
-			}),
-		});
-
-		try {
-			await Notifications.registerTaskAsync(NOTIFICATION_TASK);
-		} catch (error) {
-			console.error("Failed to register background task:", error);
-		}
-	}
 
 	// const Check = ({ i }: { i: number }) => {
 	// 	const [checked, setChecked] = React.useState(false);
@@ -244,7 +165,7 @@ export default function PrayerTime() {
 						/>
 					</View>
 
-					<Text style={styles.title}>{prayerTimesData?.Hijri}</Text>
+					<Text style={styles.title}>{prayerTimesData?.hijri_date}</Text>
 
 					<View>
 						{prayerTimes?.map((time, index) => {
@@ -287,6 +208,93 @@ export default function PrayerTime() {
 			)}
 		</View>
 	);
+}
+
+function parseMUISPrayerTimes(MUISPrayerTime: MUISPrayerTime) {
+	const { subuh, syuruk, zohor, asar, maghrib, isyak } = MUISPrayerTime;
+	const prayerTimesMap = [subuh, syuruk, zohor, asar, maghrib, isyak].map((time: string) => {
+		const afternoon = time.endsWith("pm") ? 12 : 0;
+		const [hours, minutes] = time
+			.substring(0, time.length - 2)
+			.split(":")
+			.map(Number);
+
+		const date = new Date();
+		date.setHours(hours + afternoon, minutes, 0, 0);
+
+		return date.getTime();
+	});
+	return prayerTimesMap;
+}
+
+async function fetchPrayerTimes() {
+	try {
+		const _url = `https://rurutbl.luluhoy.tech/api/GetPrayerTime?v=${new Date().getTime()}`;
+
+		const prayerTimesRes = await axios.get(_url);
+		// setPrayerTimesData(prayerTimesRes.data);
+
+		return prayerTimesRes.data;
+	} catch (error) {
+		console.error("Error fetching prayer times:", error);
+		throw new Error("Unable to fetch prayer times");
+	}
+}
+
+async function scheduleNotifications(prayerTimes: number[]) {
+	try {
+		const { status } = await Notifications.requestPermissionsAsync();
+		if (status !== "granted") return console.warn("Notification permissions not granted");
+		if (Platform.OS == "android") await Notifications.cancelAllScheduledNotificationsAsync();
+
+		const msNow = new Date().getTime();
+		for (let i = 0; i < prayerTimes.length; i++) {
+			const currentPrayerMs = prayerTimes[i];
+			const nextPrayerMs = prayerTimes[i + 1] || prayerTimes[0] + _24Hours;
+
+			const currentPrayerDate = new Date(currentPrayerMs);
+			const nextPrayerDate = new Date(nextPrayerMs);
+
+			const currentPrayerString = currentPrayerDate.toLocaleString("en-US", {
+				timeStyle: "short",
+			});
+			const nextPrayerString = nextPrayerDate.toLocaleString("en-US", {
+				timeStyle: "short",
+			});
+
+			await Notifications.scheduleNotificationAsync({
+				content: {
+					title: `Nanoja it's ${prayer_names[i]} time!`,
+					body: `fufu You have from ${currentPrayerString} to ${nextPrayerString}`,
+				},
+				trigger: {
+					type: Notifications.SchedulableTriggerInputTypes.DATE,
+					date: currentPrayerDate,
+				},
+			});
+
+			const _isSunrise = i == 1;
+			if (_isSunrise) continue;
+			const hasAlreadyPassed = msNow > nextPrayerMs;
+			const dayOffset = hasAlreadyPassed ? _24Hours : 0;
+			const BeforenextTime = nextPrayerMs - _30Mins + dayOffset;
+			const notificationTime30 = new Date(BeforenextTime);
+
+			await Notifications.scheduleNotificationAsync({
+				content: {
+					title: `EEEP! ${prayer_names[i]} is running out ;-;`,
+					body: "Nanoja you have 30 mins left!",
+				},
+				trigger: {
+					type: Notifications.SchedulableTriggerInputTypes.DATE,
+					date: notificationTime30,
+				},
+			});
+		}
+	} catch (error) {
+		console.error(error);
+		alert("Error fetching " + error);
+	}
 }
 
 function style(

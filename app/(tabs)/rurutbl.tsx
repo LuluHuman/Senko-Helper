@@ -58,14 +58,13 @@ export default function RuruTBL() {
 
 	useEffect(() => {
 		const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
-		const semstartDate = new Date("2025-1-4"); //? Note: Date shall be set every Saturday of the semester (2 Days before Mon)
+		const semstartDate = new Date("2025-3-21"); //? Note: Date shall be set every Saturday of the semester (2 Days before Mon)
 		const currentDate = new Date();
 
 		const _timeDifference = currentDate.getTime() - semstartDate.getTime();
 		const weekNumber = Math.ceil(_timeDifference / millisecondsPerWeek);
 
-		const HBLWeeks = [4, 10];
-		// const HBLWeeks = [2, 6, 8, 10];
+		const HBLWeeks = [2, 6, 8, 10];
 		const isOdd = !HBLWeeks.includes(weekNumber);
 		setweekState(isOdd ? "odd" : "even");
 	}, []);
@@ -93,6 +92,7 @@ export default function RuruTBL() {
 
 		const curDayI = curDate.getDay();
 		const curDay = ToDayStr(curDayI).long;
+
 		const dayList: dayList = weekList[curDay] as dayList;
 
 		const sortedTimeList = Object.keys(dayList).sort((a, b) => parseInt(a) - parseInt(b));
@@ -128,8 +128,8 @@ export default function RuruTBL() {
 		Loop();
 		setCurrentTimeout(setInterval(Loop, 500));
 		function Loop() {
-			if (!weekList) return clearInterval(currentTimeout);
-			if (!day) return clearInterval(currentTimeout);
+			if (!weekList) return;
+			if (!day) return;
 			const msSinceMidnight = new DateMs().getMidnightOffset();
 			const dayList: dayList = weekList[day];
 			setDaylist(dayList);
@@ -138,7 +138,7 @@ export default function RuruTBL() {
 			const lastLsnTime = parseInt(sortedTimeList[sortedTimeList.length - 1]);
 
 			if (loading) setLoading(false);
-			if (msSinceMidnight > lastLsnTime) return clearInterval(currentTimeout);
+			if (msSinceMidnight > lastLsnTime) return;
 
 			const nextLsnTime: string = getCurrentLsn(sortedTimeList, msSinceMidnight);
 
@@ -162,7 +162,6 @@ export default function RuruTBL() {
 
 			const remainingPercentage = (SubjDuration - remainingSec) / SubjDuration;
 			setProgressPercentage(remainingPercentage);
-
 			setActiveIndex(sortedTimeList.indexOf(nextLsnTime) - 1);
 
 			setTrackLabels({
@@ -244,11 +243,13 @@ export default function RuruTBL() {
 										justifyContent: "center",
 									}}>
 									<PublicConfig
+										key={1}
 										settings={settings}
 										states={states}
 										setStates={setStates}
 									/>
 									<WeatherData
+										key={2}
 										dayList={daylist}
 										day={day}
 									/>

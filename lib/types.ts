@@ -33,12 +33,11 @@ export type services =
     | [];
 
 export interface MUISPrayerTime {
-    "PrayerDate": string,
-    "Hijri": string,
-    "Subuh": string,
-    "Syuruk": string,
-    "Zohor": string,
-    "Asar": string,
-    "Maghrib": string,
-    "Isyak": string,
+    "hijri_date": string,
+    "subuh": string,
+    "syuruk": string,
+    "zohor": string,
+    "asar": string,
+    "maghrib": string,
+    "isyak": string
 }
